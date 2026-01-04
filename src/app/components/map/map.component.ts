@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, effect, input } from '@angular/core';
+import { Component, OnInit, OnDestroy, effect, input, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import Map from 'ol/Map';
 import View from 'ol/View';
@@ -29,10 +29,13 @@ import { PlacesService } from '../../services/places.service';
     }
   `]
 })
+
+
 export class MapComponent implements OnInit, OnDestroy {
-  filteredPlaces = input<Place[]>([]);
-  
+  filteredPlaces = input.required<Place[]>();
+
   private map!: Map;
+  
   private vectorSource!: VectorSource;
   private vectorLayer!: VectorLayer<VectorSource>;
 

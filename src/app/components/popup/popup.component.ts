@@ -264,3 +264,4 @@ export class PopupComponent {
   t(key: string): string {
     return this.translationService.translate(key);
   }
+}

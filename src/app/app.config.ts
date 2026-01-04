@@ -1,12 +1,14 @@
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { provideHttpClient, withFetch } from '@angular/common/http';
-import { routes } from './app.routes';
+import { provideHttpClient } from '@angular/common/http'; // ← CRÍTICO
+import { importProvidersFrom } from '@angular/core'; // Si necesitas módulos
+import { routes } from './app.routes'; // o tu routes
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    provideHttpClient(withFetch())
+    provideHttpClient(), // HTTP para PlacesService
+    // Agrega services aquí si NO tienen providedIn: 'root'
+    // TranslationService,
   ]
 };

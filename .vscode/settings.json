@@ -1,0 +1,7 @@
+{
+  "typescript.preferences.includePackageJsonAutoImports": "off",
+  "typescript.suggest.autoImports": false,
+  "eslint.validate": ["typescript", "html", "scss"],
+  "tslint.jsRules.enable": false
+}
+

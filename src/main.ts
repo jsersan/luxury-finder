@@ -1,6 +1,6 @@
 import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
-import { App } from './app/app';
+import { AppComponent } from './app/app.component';  // CAMBIA App -> AppComponent
 
-bootstrapApplication(App, appConfig)
+bootstrapApplication(AppComponent, appConfig)  // CAMBIA App -> AppComponent
   .catch((err) => console.error(err));
