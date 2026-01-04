@@ -1,4 +1,4 @@
-mport { Component, OnInit, OnDestroy, effect, input } from '@angular/core';
+import { Component, OnInit, OnDestroy, effect, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import Map from 'ol/Map';
 import View from 'ol/View';

@@ -7,6 +7,7 @@ import { PopupComponent } from './components/popup/popup.component';
 import { PlacesService } from './services/places.service';
 import { TranslationService } from './services/translation.service';
 import { Language, Place } from './models/place.model';
+import { AnyType } from '../../node_modules/ol/expr/expression';
 
 @Component({
   selector: 'app-root',
@@ -303,7 +304,7 @@ export class AppComponent {
     const type = this.selectedType();
     const lang = this.currentLang();
 
-    return places.filter(place => {
+    return places.filter((place: { type: any; name: { [x: string]: string; }; municipality: string; province: string; }) => {
       const matchesType = type === 'all' || place.type === type;
       const matchesSearch = place.name[lang].toLowerCase().includes(term) ||
                            place.municipality.toLowerCase().includes(term) ||
