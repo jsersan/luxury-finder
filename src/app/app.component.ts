@@ -1,4 +1,4 @@
-import { Component, computed, signal, inject } from '@angular/core'
+import { Component, signal, Signal, computed } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { FormsModule } from '@angular/forms'
 import { MapComponent } from './components/map/map.component'
@@ -6,17 +6,12 @@ import { PopupComponent } from './components/popup/popup.component'
 import { PlacesService } from './services/places.service'
 import { TranslationService } from './services/translation.service'
 import { Language, Place } from './models/place.model'
-import { forwardRef } from '@angular/core';
 import { TranslatePipe } from './pipe/translate.pipe'
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, FormsModule, 
-            MapComponent, 
-            PopupComponent, 
-            forwardRef(() => PopupComponent),  // ← Temporal
-            TranslatePipe],
+  imports: [CommonModule, FormsModule, MapComponent, PopupComponent, TranslatePipe],
   template: `
     <div class="app-container">
       <!-- Header -->
@@ -34,7 +29,7 @@ import { TranslatePipe } from './pipe/translate.pipe'
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
               <circle cx="12" cy="10" r="3" />
             </svg>
-            <h1>{{ 'title' }}</h1>
+            <h1>{{ 'title' | t }}</h1>
           </div>
           <div class="language-selector">
             @for (lang of languages; track trackLang($index, lang)) {
@@ -81,7 +76,7 @@ import { TranslatePipe } from './pipe/translate.pipe'
               class="search-input"
               placeholder="{{ 'search' | t }}"
               [value]="searchTerm()"
-              (input)="onSearchChange($event.target.value)"
+              (input)="onSearchChange($event)"
             />
           </div>
 
@@ -99,21 +94,21 @@ import { TranslatePipe } from './pipe/translate.pipe'
               [class.active-all]="selectedType() === 'all'"
               (click)="setType('all')"
             >
-              {{ 'all' }}
+              {{ 'all' | t }}
             </button>
             <button
               class="filter-btn"
               [class.active-hotel]="selectedType() === 'hotel'"
               (click)="setType('hotel')"
             >
-              {{ 'hotels' }}
+              {{ 'hotels' | t }}
             </button>
             <button
               class="filter-btn"
               [class.active-restaurant]="selectedType() === 'restaurant'"
               (click)="setType('restaurant')"
             >
-              {{ 'restaurants' }}
+              {{ 'restaurants' | t }}
             </button>
           </div>
         </div>
@@ -131,60 +126,242 @@ import { TranslatePipe } from './pipe/translate.pipe'
   `,
   styles: [
     `
-      /* Tus estilos CSS aquí sin cambios - copiar del original */
       .app-container {
-        /* ... */
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        background: #f5f5f5;
       }
-      /* etc. */
+
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .header-content {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 700;
+      }
+
+      .language-selector {
+        display: flex;
+        gap: 10px;
+      }
+
+      .lang-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s;
+      }
+
+      .lang-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      .lang-btn.active {
+        background: white;
+        color: #667eea;
+        border-color: white;
+      }
+
+      .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 300px;
+        gap: 20px;
+      }
+
+      .spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      .controls {
+        background: white;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .controls-content {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .search-container {
+        position: relative;
+        width: 100%;
+      }
+
+      .search-icon {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #999;
+      }
+
+      .search-input {
+        width: 100%;
+        padding: 12px 15px 12px 45px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 16px;
+        transition: border-color 0.3s;
+      }
+
+      .search-input:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .stats {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+
+      .stat-item {
+        color: #666;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .filter-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .filter-btn {
+        padding: 10px 20px;
+        border: 2px solid #e0e0e0;
+        background: white;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s;
+        color: #333;
+      }
+
+      .filter-btn:hover {
+        border-color: #667eea;
+        color: #667eea;
+      }
+
+      .filter-btn.active-all {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-color: #667eea;
+      }
+
+      .filter-btn.active-hotel {
+        background: #8B4513;
+        color: white;
+        border-color: #8B4513;
+      }
+
+      .filter-btn.active-restaurant {
+        background: #DC143C;
+        color: white;
+        border-color: #DC143C;
+      }
+
+      .map-container {
+        flex: 1;
+        position: relative;
+        overflow: hidden;
+      }
     `
   ]
 })
 export class AppComponent {
-  private placesService = inject(PlacesService)
-  private translationService = inject(TranslationService)
+  languages: Language[] = ['es', 'eu', 'en'];
+  searchTerm = signal('');
+  selectedType = signal<'all' | 'hotel' | 'restaurant'>('all');
 
-  // Signals
-  languages: Language[] = ['es', 'eu', 'en']
-  searchTerm = signal('')
-  selectedType = signal<'all' | 'hotel' | 'restaurant'>('all')
+  currentLang: Signal<Language>;
+  isLoading: Signal<boolean>;
+  filteredPlaces: Signal<Place[]>;
 
-  // Computed
-  currentLang = computed(() => this.translationService.currentLanguage())
-  isLoading = computed(() => this.placesService.isLoading)
-  filteredPlaces = computed(() => {
-    const places = this.placesService.places()
-    const term = this.searchTerm().toLowerCase()
-    const type = this.selectedType()
-    const lang = this.currentLang()
-    return places.filter((place: Place) => {
-      const matchesType = type === 'all' || place.type === type
-      const matchesSearch =
-        place.name[lang]?.toLowerCase().includes(term) ||
-        place.municipality.toLowerCase().includes(term) ||
-        place.province.toLowerCase().includes(term)
-      return matchesType && matchesSearch
-    })
-  })
-
-  trackLang = (index: number, lang: Language): Language => lang
-
-  setLanguage (lang: Language): void {
-    this.translationService.setLanguage(lang)
+  constructor(
+    private placesService: PlacesService,
+    private translationService: TranslationService
+  ) {
+    // Inicializar computed DENTRO del constructor
+    this.currentLang = computed(() => this.translationService.currentLanguage());
+    this.isLoading = computed(() => this.placesService.isLoading());
+    this.filteredPlaces = computed(() => {
+      const places = this.placesService.places();
+      const term = this.searchTerm().toLowerCase();
+      const type = this.selectedType();
+      const lang = this.currentLang();
+      return places.filter((place: Place) => {
+        const matchesType = type === 'all' || place.type === type;
+        const matchesSearch =
+          place.name[lang]?.toLowerCase().includes(term) ||
+          place.municipality.toLowerCase().includes(term) ||
+          place.province.toLowerCase().includes(term);
+        return matchesType && matchesSearch;
+      });
+    });
   }
 
-  onSearchChange (value: string): void {
-    this.searchTerm.set(value)
+  trackLang = (index: number, lang: Language): Language => lang;
+
+  setLanguage(lang: Language): void {
+    this.translationService.setLanguage(lang);
   }
 
-  getHotelCount (): number {
-    return this.filteredPlaces().filter((p: Place) => p.type === 'hotel').length
+  onSearchChange(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.searchTerm.set(target.value);
   }
 
-  getRestaurantCount (): number {
-    return this.filteredPlaces().filter((p: Place) => p.type === 'restaurant').length
+  getHotelCount(): number {
+    return this.filteredPlaces().filter((p: Place) => p.type === 'hotel').length;
   }
 
-  setType (type: 'all' | 'hotel' | 'restaurant'): void {
-    this.selectedType.set(type)
+  getRestaurantCount(): number {
+    return this.filteredPlaces().filter((p: Place) => p.type === 'restaurant').length;
+  }
+
+  setType(type: 'all' | 'hotel' | 'restaurant'): void {
+    this.selectedType.set(type);
   }
 }

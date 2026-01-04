@@ -1,7 +1,8 @@
-import { Component, computed } from '@angular/core';
+import { Component, computed, Signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PlacesService } from '../../services/places.service';
 import { TranslationService } from '../../services/translation.service';
+import { Place } from '../../models/place.model';
 
 @Component({
   selector: 'app-popup',
@@ -57,12 +58,14 @@ import { TranslationService } from '../../services/translation.service';
                 <a [href]="'tel:' + place()!.phone">{{ place()!.phone }}</a>
               </div>
             </div>
+            @if (place()!.email) {
             <div class="info-row">
               <div class="info-label">✉️ {{ t('email') }}</div>
               <div class="info-value">
                 <a [href]="'mailto:' + place()!.email">{{ place()!.email }}</a>
               </div>
             </div>
+            }
             <div class="info-row">
               <div class="info-label">🌐 {{ t('website') }}</div>
               <div class="info-value">
@@ -244,18 +247,22 @@ import { TranslationService } from '../../services/translation.service';
   `]
 })
 export class PopupComponent {
-  place = this.placesService.selectedPlace;
-  
-  placeName = computed(() => {
-    const place = this.place();
-    if (!place) return '';
-    return place.name[this.translationService.currentLanguage()];
-  });
+  place: Signal<Place | null>;
+  placeName: Signal<string>;
 
   constructor(
     private placesService: PlacesService,
     private translationService: TranslationService
-  ) {}
+  ) {
+    // Inicializar signals en el constructor
+    this.place = this.placesService.selectedPlace;
+    
+    this.placeName = computed(() => {
+      const place = this.place();
+      if (!place) return '';
+      return place.name[this.translationService.currentLanguage()];
+    });
+  }
 
   close() {
     this.placesService.selectPlace(null);

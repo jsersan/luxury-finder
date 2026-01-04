@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, effect, input, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy, effect, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import Map from 'ol/Map';
 import View from 'ol/View';
@@ -9,8 +9,7 @@ import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
-import { Style, Icon, Text, Fill, Stroke } from 'ol/style';
-import Overlay from 'ol/Overlay';
+import { Style, Icon } from 'ol/style';
 import { Place } from '../../models/place.model';
 import { PlacesService } from '../../services/places.service';
 
@@ -29,13 +28,10 @@ import { PlacesService } from '../../services/places.service';
     }
   `]
 })
-
-
 export class MapComponent implements OnInit, OnDestroy {
   filteredPlaces = input.required<Place[]>();
 
   private map!: Map;
-  
   private vectorSource!: VectorSource;
   private vectorLayer!: VectorLayer<VectorSource>;
 
@@ -59,13 +55,11 @@ export class MapComponent implements OnInit, OnDestroy {
   }
 
   private initMap() {
-    // Crear fuente y capa vectorial para marcadores
     this.vectorSource = new VectorSource();
     this.vectorLayer = new VectorLayer({
       source: this.vectorSource
     });
 
-    // Crear mapa
     this.map = new Map({
       target: 'map',
       layers: [
@@ -75,12 +69,11 @@ export class MapComponent implements OnInit, OnDestroy {
         this.vectorLayer
       ],
       view: new View({
-        center: fromLonLat([-3.7038, 40.4168]), // Madrid
-        zoom: 12
+        center: fromLonLat([-3.7038, 40.4168]),
+        zoom: 6
       })
     });
 
-    // Añadir evento de clic
     this.map.on('click', (evt) => {
       const feature = this.map.forEachFeatureAtPixel(evt.pixel, (f) => f);
       if (feature) {
@@ -89,7 +82,6 @@ export class MapComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Añadir marcadores iniciales
     this.updateMarkers(this.filteredPlaces());
   }
 
