@@ -1,4 +1,4 @@
-import { Component, signal, Signal, computed } from '@angular/core'
+import { Component, signal } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { FormsModule } from '@angular/forms'
 import { MapComponent } from './components/map/map.component'
@@ -35,7 +35,7 @@ import { TranslatePipe } from './pipe/translate.pipe'
             @for (lang of languages; track trackLang($index, lang)) {
             <button
               class="lang-btn"
-              [class.active]="currentLang() === lang"
+              [class.active]="currentLang === lang"
               (click)="setLanguage(lang)"
             >
               {{ lang.toUpperCase() }}
@@ -46,7 +46,7 @@ import { TranslatePipe } from './pipe/translate.pipe'
       </header>
 
       <!-- Loading State -->
-      @if (isLoading()) {
+      @if (isLoading) {
       <div class="loading-container">
         <div class="spinner"></div>
         <p>Cargando establecimientos...</p>
@@ -54,7 +54,7 @@ import { TranslatePipe } from './pipe/translate.pipe'
       }
 
       <!-- Controls -->
-      @if (!isLoading()) {
+      @if (!isLoading) {
       <div class="controls">
         <div class="controls-content">
           <!-- Search -->
@@ -82,7 +82,7 @@ import { TranslatePipe } from './pipe/translate.pipe'
 
           <!-- Stats -->
           <div class="stats">
-            <span class="stat-item">Total: {{ filteredPlaces().length }} establecimientos</span>
+            <span class="stat-item">Total: {{ filteredPlaces.length }} establecimientos</span>
             <span class="stat-item">Hoteles: {{ getHotelCount() }}</span>
             <span class="stat-item">Restaurantes: {{ getRestaurantCount() }}</span>
           </div>
@@ -117,7 +117,7 @@ import { TranslatePipe } from './pipe/translate.pipe'
 
       <!-- Map -->
       <div class="map-container">
-        <app-map [filteredPlaces]="filteredPlaces()"></app-map>
+        <app-map [filteredPlaces]="filteredPlaces"></app-map>
       </div>
 
       <!-- Popup -->
@@ -315,30 +315,33 @@ export class AppComponent {
   searchTerm = signal('');
   selectedType = signal<'all' | 'hotel' | 'restaurant'>('all');
 
-  currentLang: Signal<Language>;
-  isLoading: Signal<boolean>;
-  filteredPlaces: Signal<Place[]>;
-
   constructor(
     private placesService: PlacesService,
     private translationService: TranslationService
-  ) {
-    // Inicializar computed DENTRO del constructor
-    this.currentLang = computed(() => this.translationService.currentLanguage());
-    this.isLoading = computed(() => this.placesService.isLoading());
-    this.filteredPlaces = computed(() => {
-      const places = this.placesService.places();
-      const term = this.searchTerm().toLowerCase();
-      const type = this.selectedType();
-      const lang = this.currentLang();
-      return places.filter((place: Place) => {
-        const matchesType = type === 'all' || place.type === type;
-        const matchesSearch =
-          place.name[lang]?.toLowerCase().includes(term) ||
-          place.municipality.toLowerCase().includes(term) ||
-          place.province.toLowerCase().includes(term);
-        return matchesType && matchesSearch;
-      });
+  ) {}
+
+  // Usar getters en lugar de computed()
+  get currentLang(): Language {
+    return this.translationService.currentLanguage();
+  }
+
+  get isLoading(): boolean {
+    return this.placesService.isLoading();
+  }
+
+  get filteredPlaces(): Place[] {
+    const places = this.placesService.places();
+    const term = this.searchTerm().toLowerCase();
+    const type = this.selectedType();
+    const lang = this.currentLang;
+    
+    return places.filter((place: Place) => {
+      const matchesType = type === 'all' || place.type === type;
+      const matchesSearch =
+        place.name[lang]?.toLowerCase().includes(term) ||
+        place.municipality.toLowerCase().includes(term) ||
+        place.province.toLowerCase().includes(term);
+      return matchesType && matchesSearch;
     });
   }
 
@@ -354,11 +357,11 @@ export class AppComponent {
   }
 
   getHotelCount(): number {
-    return this.filteredPlaces().filter((p: Place) => p.type === 'hotel').length;
+    return this.filteredPlaces.filter((p: Place) => p.type === 'hotel').length;
   }
 
   getRestaurantCount(): number {
-    return this.filteredPlaces().filter((p: Place) => p.type === 'restaurant').length;
+    return this.filteredPlaces.filter((p: Place) => p.type === 'restaurant').length;
   }
 
   setType(type: 'all' | 'hotel' | 'restaurant'): void {

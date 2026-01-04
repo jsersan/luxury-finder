@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, effect, input } from '@angular/core';
+import { Component, OnInit, OnDestroy, input, effect, Injector, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import Map from 'ol/Map';
 import View from 'ol/View';
@@ -34,27 +34,29 @@ export class MapComponent implements OnInit, OnDestroy {
   private map!: Map;
   private vectorSource!: VectorSource;
   private vectorLayer!: VectorLayer<VectorSource>;
+  private injector = inject(Injector);
 
-  constructor(private placesService: PlacesService) {
+  constructor(private placesService: PlacesService) {}
+
+  ngOnInit(): void {
+    this.initMap();
+    
+    // Create effect in ngOnInit with explicit injector
     effect(() => {
       const places = this.filteredPlaces();
       if (this.vectorSource) {
         this.updateMarkers(places);
       }
-    });
+    }, { injector: this.injector });
   }
 
-  ngOnInit() {
-    this.initMap();
-  }
-
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     if (this.map) {
       this.map.setTarget(undefined);
     }
   }
 
-  private initMap() {
+  private initMap(): void {
     this.vectorSource = new VectorSource();
     this.vectorLayer = new VectorLayer({
       source: this.vectorSource
@@ -85,7 +87,9 @@ export class MapComponent implements OnInit, OnDestroy {
     this.updateMarkers(this.filteredPlaces());
   }
 
-  private updateMarkers(places: Place[]) {
+  private updateMarkers(places: Place[]): void {
+    if (!this.vectorSource) return;
+    
     this.vectorSource.clear();
 
     places.forEach(place => {

@@ -13,8 +13,8 @@
     "src/main.ts"
   ],
   "include": [
-    "src/**/*.ts"
-  ],
+    "src/**/*.ts",
+    "src/app/app.component.ts"  ],
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": true,

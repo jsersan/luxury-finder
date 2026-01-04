@@ -1,4 +1,4 @@
-import { Component, computed, Signal } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PlacesService } from '../../services/places.service';
 import { TranslationService } from '../../services/translation.service';
@@ -9,67 +9,67 @@ import { Place } from '../../models/place.model';
   standalone: true,
   imports: [CommonModule],
   template: `
-    @if (place()) {
+    @if (place) {
       <div class="overlay" (click)="close()"></div>
       <div class="popup">
         <div class="popup-image">
-          <img [src]="place()!.image" [alt]="placeName()">
+          <img [src]="place.image" [alt]="placeName">
           <button class="close-btn" (click)="close()">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
           </button>
-          <div class="type-badge" [class.hotel]="place()!.type === 'hotel'" [class.restaurant]="place()!.type === 'restaurant'">
-            {{ place()!.type === 'hotel' ? t('hotels') : t('restaurants') }}
+          <div class="type-badge" [class.hotel]="place.type === 'hotel'" [class.restaurant]="place.type === 'restaurant'">
+            {{ place.type === 'hotel' ? t('hotels') : t('restaurants') }}
           </div>
         </div>
 
         <div class="popup-content">
           <div class="header">
-            <h2>{{ placeName() }}</h2>
+            <h2>{{ placeName }}</h2>
             <div class="rating">
               @for (star of [1,2,3,4,5]; track star) {
-                <span class="star" [class.filled]="star <= place()!.rating">★</span>
+                <span class="star" [class.filled]="star <= place.rating">&#9733;</span>
               }
             </div>
           </div>
 
           <div class="info-grid">
             <div class="info-row">
-              <div class="info-label">📍 {{ t('address') }}</div>
-              <div class="info-value">{{ place()!.address }}</div>
+              <div class="info-label">{{ t('address') }}</div>
+              <div class="info-value">{{ place.address }}</div>
             </div>
             <div class="info-row">
-              <div class="info-label">📮 {{ t('postalCode') }}</div>
-              <div class="info-value">{{ place()!.postalCode }}</div>
+              <div class="info-label">{{ t('postalCode') }}</div>
+              <div class="info-value">{{ place.postalCode }}</div>
             </div>
             <div class="info-row">
-              <div class="info-label">🏛️ {{ t('municipality') }}</div>
-              <div class="info-value">{{ place()!.municipality }}</div>
+              <div class="info-label">{{ t('municipality') }}</div>
+              <div class="info-value">{{ place.municipality }}</div>
             </div>
             <div class="info-row">
-              <div class="info-label">🗺️ {{ t('province') }}</div>
-              <div class="info-value">{{ place()!.province }}</div>
+              <div class="info-label">{{ t('province') }}</div>
+              <div class="info-value">{{ place.province }}</div>
             </div>
             <div class="info-row">
-              <div class="info-label">📞 {{ t('phone') }}</div>
+              <div class="info-label">{{ t('phone') }}</div>
               <div class="info-value">
-                <a [href]="'tel:' + place()!.phone">{{ place()!.phone }}</a>
+                <a [href]="'tel:' + place.phone">{{ place.phone }}</a>
               </div>
             </div>
-            @if (place()!.email) {
+            @if (place.email) {
             <div class="info-row">
-              <div class="info-label">✉️ {{ t('email') }}</div>
+              <div class="info-label">{{ t('email') }}</div>
               <div class="info-value">
-                <a [href]="'mailto:' + place()!.email">{{ place()!.email }}</a>
+                <a [href]="'mailto:' + place.email">{{ place.email }}</a>
               </div>
             </div>
             }
             <div class="info-row">
-              <div class="info-label">🌐 {{ t('website') }}</div>
+              <div class="info-label">{{ t('website') }}</div>
               <div class="info-value">
-                <a [href]="'https://' + place()!.website" target="_blank">{{ place()!.website }}</a>
+                <a [href]="'https://' + place.website" target="_blank">{{ place.website }}</a>
               </div>
             </div>
           </div>
@@ -220,13 +220,20 @@ import { Place } from '../../models/place.model';
       display: flex;
       flex-direction: column;
       gap: 4px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .info-row:last-child {
+      border-bottom: none;
     }
 
     .info-label {
-      font-size: 12px;
+      font-size: 11px;
       color: #999;
       font-weight: 600;
       text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .info-value {
@@ -247,24 +254,22 @@ import { Place } from '../../models/place.model';
   `]
 })
 export class PopupComponent {
-  place: Signal<Place | null>;
-  placeName: Signal<string>;
-
   constructor(
     private placesService: PlacesService,
     private translationService: TranslationService
-  ) {
-    // Inicializar signals en el constructor
-    this.place = this.placesService.selectedPlace;
-    
-    this.placeName = computed(() => {
-      const place = this.place();
-      if (!place) return '';
-      return place.name[this.translationService.currentLanguage()];
-    });
+  ) {}
+
+  get place(): Place | null {
+    return this.placesService.selectedPlace();
   }
 
-  close() {
+  get placeName(): string {
+    const place = this.place;
+    if (!place) return '';
+    return place.name[this.translationService.currentLanguage()];
+  }
+
+  close(): void {
     this.placesService.selectPlace(null);
   }
 
